@@ -144,7 +144,7 @@
       </div>
     </div>
 
-    <div class="tl-item" data-date="2026-08-30">
+    <div class="tl-item" data-date="2026-08-24" data-date-end="2026-08-30">
       <span class="tl-date">24–30 Aug</span>
       <div class="tl-dot gray"></div>
       <div class="tl-content">
@@ -210,23 +210,46 @@
   </div>
 
   <script>
+    function parseLocalDate(dateStr) {
+      var p = dateStr.split('-');
+      return new Date(+p[0], +p[1] - 1, +p[2]);
+    }
+
+    function startOfDay(d) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
     function updateTimeline() {
-      var today = new Date();
-      today.setHours(0, 0, 0, 0);
+      var today = startOfDay(new Date());
       var items = document.querySelectorAll('.tl-item[data-date]');
       var closestItem = null;
       var closestDiff = Infinity;
+
       items.forEach(function (item) {
-        var d = new Date(item.dataset.date + 'T00:00:00');
-        var diff = d - today;
+        var start = parseLocalDate(item.getAttribute('data-date'));
+        var endAttr = item.getAttribute('data-date-end');
+        var end = endAttr ? parseLocalDate(endAttr) : start;
+        var diff;
+
         item.classList.remove('past', 'next');
-        if (diff < 0) {
+
+        if (today > end) {
           item.classList.add('past');
-        } else if (diff < closestDiff) {
+          return;
+        }
+
+        if (today >= start && today <= end) {
+          diff = 0;
+        } else {
+          diff = start - today;
+        }
+
+        if (diff < closestDiff) {
           closestDiff = diff;
           closestItem = item;
         }
       });
+
       if (closestItem) closestItem.classList.add('next');
     }
     updateTimeline();
